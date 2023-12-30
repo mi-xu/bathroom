@@ -3,6 +3,7 @@
 import { db } from "../src/server/db";
 
 async function main() {
+  await db.room.deleteMany({});
   await db.room.create({
     data: {
       id: 0,
