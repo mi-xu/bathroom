@@ -9,7 +9,7 @@ export const fontSans = FontSans({
   variable: "--font-sans",
 });
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
@@ -62,13 +62,20 @@ function NameForm({ signin }: { signin: (name: string) => void }) {
 }
 
 function RoomStatus({ name, signout }: { name: string; signout: () => void }) {
-  const rooms = api.room.get.useQuery(undefined, { refetchInterval: 1000 });
+  const rooms = api.room.get.useQuery(undefined, { refetchInterval: 5000 });
   const enterMut = api.room.enter.useMutation();
   const leaveMut = api.room.leave.useMutation();
   const isUsingARoom = rooms.data?.some((room) => room.occupant === name);
   const isWaitingAny = rooms.data?.some((room) => room.waitList.includes(name));
   const waitMut = api.room.wait.useMutation();
   const unwaitMut = api.room.unwait.useMutation();
+  const rs = useMemo(() => {
+    const { data } = rooms;
+    if (data == null) return [];
+    const result = [...rooms.data];
+    result.sort((a, b) => a.id - b.id);
+    return result;
+  }, [rooms]);
   return (
     <>
       <div className="flex w-full items-center justify-between space-x-2">
@@ -77,7 +84,7 @@ function RoomStatus({ name, signout }: { name: string; signout: () => void }) {
           <PiPencilSimple />
         </Button>
       </div>
-      {rooms.data?.map((room) => {
+      {rs.map((room) => {
         const isOpen = room.occupant == null;
         const isOccupiedByMe = room.occupant === name;
         const { enteredAt } = room;
